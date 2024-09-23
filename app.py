@@ -223,8 +223,6 @@ class Timefarm:
                         await self.submissions_tasks(token=token, task_id=task['id'], task_title=task['title'], task_reward=task['reward'])
                     elif task['submission']['status'] == 'COMPLETED':
                         await self.claims_tasks(token=token, task_id=task['id'], task_title=task['title'], task_reward=task['submission']['reward'])
-                    elif task['submission']['status'] == 'SUBMITTED':
-                        self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ {task['title']} Submitted ]{Style.RESET_ALL}")
         except RequestException as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching Tasks: {str(e)} ]{Style.RESET_ALL}")
         except (Exception, JSONDecodeError) as e:
