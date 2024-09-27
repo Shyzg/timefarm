@@ -1,8 +1,7 @@
 from colorama import *
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from fake_useragent import FakeUserAgent
 from faker import Faker
-from pytz import utc
 from telethon.errors import (
     AuthKeyUnregisteredError,
     UserDeactivatedError,
@@ -342,7 +341,7 @@ class Timefarm:
                     info_farming = await self.info_farming(token=account['token'])
                     if info_farming is not None:
                         if 'activeFarmingStartedAt' in info_farming:
-                            end_farm = (datetime.strptime(info_farming['activeFarmingStartedAt'], "%Y-%m-%dT%H:%M:%S.%fZ") + timedelta(seconds=info_farming['farmingDurationInSec'])).replace(tzinfo=utc).astimezone()
+                            end_farm = (datetime.strptime(info_farming['activeFarmingStartedAt'], "%Y-%m-%dT%H:%M:%S.%fZ") + timedelta(seconds=info_farming['farmingDurationInSec'])).replace(tzinfo=UTC).astimezone()
                             if datetime.now().astimezone() >= end_farm:
                                 await self.finish_farming(token=account['token'], farming_reward=info_farming['farmingReward'])
                             else:
