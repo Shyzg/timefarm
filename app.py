@@ -25,6 +25,8 @@ import sys
 
 class Timefarm:
     def __init__(self) -> None:
+        self.api_id = 25657041
+        self.api_hash = 'bcb88f6cbd561eec16e65f4d8ce342da'
         self.faker = Faker()
         self.headers = {
             'Accept': '*/*',
@@ -39,8 +41,6 @@ class Timefarm:
             'Sec-Fetch-Site': 'cross-site',
             'User-Agent': FakeUserAgent().random
         }
-        self.api_id = 26326768
-        self.api_hash = 'ff06b969a60cdb700f6e965de8e34e68'
 
     def clear_terminal(self):
         os.system('cls' if os.name == 'nt' else 'clear')
@@ -68,6 +68,7 @@ class Timefarm:
                     url='https://tg-bot-tap.laborx.io/'
                 ))
                 query = unquote(string=webapp_response.url.split('tgWebAppData=')[1].split('&tgWebAppVersion')[0])
+
                 await client.disconnect()
                 return query
         except Exception as e:
