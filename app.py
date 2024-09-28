@@ -54,22 +54,23 @@ class Timefarm:
 
     async def generate_query(self, session: str):
         try:
-            async with TelegramClient(session=f'sessions/{session}', api_id=self.api_id, api_hash=self.api_hash) as client:
-                try:
-                    await client.connect()
-                except (AuthKeyUnregisteredError, UnauthorizedError, UserDeactivatedError, UserDeactivatedBanError) as e:
-                    raise e
+            client = TelegramClient(session=f'sessions/{session}', api_id=self.api_id, api_hash=self.api_hash)
 
-                webapp_response: AppWebViewResultUrl = await client(messages.RequestWebViewRequest(
-                    peer='TimeFarmCryptoBot',
-                    bot=await client.get_input_entity('TimeFarmCryptoBot'),
-                    platform='ios',
-                    url='https://tg-bot-tap.laborx.io/'
-                ))
-                query = unquote(string=webapp_response.url.split('tgWebAppData=')[1].split('&tgWebAppVersion')[0])
+            try:
+                await client.connect()
+            except (AuthKeyUnregisteredError, UnauthorizedError, UserDeactivatedError, UserDeactivatedBanError) as e:
+                raise e
 
-                await client.disconnect()
-                return query
+            webapp_response: AppWebViewResultUrl = await client(messages.RequestWebViewRequest(
+                peer='TimeFarmCryptoBot',
+                bot=await client.get_input_entity('TimeFarmCryptoBot'),
+                platform='ios',
+                url='https://tg-bot-tap.laborx.io/'
+            ))
+            query = unquote(string=webapp_response.url.split('tgWebAppData=')[1].split('&tgWebAppVersion')[0])
+
+            await client.disconnect()
+            return query
         except Exception as e:
             self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ {session} Unexpected Error While Generating Query With Telethon: {str(e)} ]{Style.RESET_ALL}")
             return None
