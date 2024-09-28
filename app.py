@@ -321,7 +321,7 @@ class Timefarm:
             with Session().get(url=url) as response:
                 response.raise_for_status()
                 answer_daily_questions = json.loads(response.text)
-                return answer_daily_questions['answer']
+                return answer_daily_questions
         except (Exception, JSONDecodeError, RequestException):
             return None
 
@@ -338,7 +338,7 @@ class Timefarm:
                 if not 'answer' in daily_questions:
                     answer_daily_questions = await self.answer_daily_questions()
                     if datetime.now().astimezone().timestamp() >= datetime.fromtimestamp(answer_daily_questions['expired']).astimezone().timestamp():
-                        return await self.post_daily_questions(token=token, answer=answer_daily_questions, reward=daily_questions['reward'])
+                        return await self.post_daily_questions(token=token, answer=answer_daily_questions['answer'], reward=daily_questions['reward'])
                 if daily_questions['answer']['isCorrect']:
                     return self.print_timestamp(f"{Fore.MAGENTA + Style.BRIGHT}[ Daily Questions Already Answered ]{Style.RESET_ALL}")
         except RequestException as e:
