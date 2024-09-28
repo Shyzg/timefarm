@@ -57,7 +57,7 @@ class Timefarm:
             async with TelegramClient(session=f'sessions/{session}', api_id=self.api_id, api_hash=self.api_hash) as client:
                 try:
                     await client.connect()
-                except (AuthKeyUnregisteredError, UnauthorizedError, UserDeactivatedBanError, UserDeactivatedError) as e:
+                except (AuthKeyUnregisteredError, UnauthorizedError, UserDeactivatedError, UserDeactivatedBanError) as e:
                     raise e
 
                 webapp_response: AppWebViewResultUrl = await client(messages.RequestWebViewRequest(
@@ -310,6 +310,58 @@ class Timefarm:
         try:
             with Session().post(url=url, headers=headers, json=payload) as response:
                 response.raise_for_status()
+        except RequestException as e:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Staking: {str(e)} ]{Style.RESET_ALL}")
+        except (Exception, JSONDecodeError) as e:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Staking: {str(e)} ]{Style.RESET_ALL}")
+
+    async def answer_daily_questions(self):
+        url = 'https://raw.githubusercontent.com/Shyzg/timefarm/refs/heads/main/answer.json'
+        try:
+            with Session().get(url=url) as response:
+                response.raise_for_status()
+                answer_daily_questions = json.loads(response.text)
+                return answer_daily_questions['answer']
+        except (Exception, JSONDecodeError, RequestException):
+            return None
+
+    async def get_daily_questions(self, token: str):
+        url = 'https://tg-bot-tap.laborx.io/api/v1/daily-questions'
+        headers = {
+            **self.headers,
+            'Authorization': f"Bearer {token}"
+        }
+        try:
+            with Session().get(url=url, headers=headers) as response:
+                response.raise_for_status()
+                daily_questions = response.json()
+                if not 'answer' in daily_questions:
+                    answer_daily_questions = await self.answer_daily_questions()
+                    if datetime.now().astimezone().timestamp() >= datetime.fromtimestamp(answer_daily_questions['expired']).astimezone().timestamp():
+                        return await self.post_daily_questions(token=token, answer=answer_daily_questions, reward=daily_questions['reward'])
+                if daily_questions['answer']['isCorrect']:
+                    return self.print_timestamp(f"{Fore.MAGENTA + Style.BRIGHT}[ Daily Questions Already Answered ]{Style.RESET_ALL}")
+        except RequestException as e:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching Daily Questions: {str(e)} ]{Style.RESET_ALL}")
+        except (Exception, JSONDecodeError) as e:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Fetching Daily Questions: {str(e)} ]{Style.RESET_ALL}")
+
+    async def post_daily_questions(self, token: str, answer: str, reward: int):
+        url = 'https://tg-bot-tap.laborx.io/api/v1/daily-questions'
+        payload = {'answer':answer}
+        headers = {
+            **self.headers,
+            'Authorization': f"Bearer {token}",
+            'Content-Length': str(len(payload)),
+            'Content-Type': 'application/json'
+        }
+        try:
+            with Session().post(url=url, headers=headers, json=payload) as response:
+                response.raise_for_status()
+                daily_questions = response.json()
+                if daily_questions['isCorrect']:
+                    return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {reward} From Daily Questions ]{Style.RESET_ALL}")
+                return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Your Daily Question Answer Is Wrong ]{Style.RESET_ALL}")
         except RequestException as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Staking: {str(e)} ]{Style.RESET_ALL}")
         except (Exception, JSONDecodeError) as e:
