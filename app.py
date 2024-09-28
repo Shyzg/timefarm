@@ -335,12 +335,12 @@ class Timefarm:
             with Session().get(url=url, headers=headers) as response:
                 response.raise_for_status()
                 daily_questions = response.json()
-                if not 'answer' in daily_questions:
-                    answer_daily_questions = await self.answer_daily_questions()
-                    if datetime.now().astimezone().timestamp() >= datetime.fromtimestamp(answer_daily_questions['expired']).astimezone().timestamp():
-                        return await self.post_daily_questions(token=token, answer=answer_daily_questions['answer'], reward=daily_questions['reward'])
-                if daily_questions['answer']['isCorrect']:
-                    return self.print_timestamp(f"{Fore.MAGENTA + Style.BRIGHT}[ Daily Questions Already Answered ]{Style.RESET_ALL}")
+                if 'answer' in daily_questions:
+                    if daily_questions['answer']['isCorrect']:
+                        return self.print_timestamp(f"{Fore.MAGENTA + Style.BRIGHT}[ Daily Questions Already Answered ]{Style.RESET_ALL}")
+                answer_daily_questions = await self.answer_daily_questions()
+                if datetime.fromtimestamp(answer_daily_questions['expires']).astimezone().timestamp() >= datetime.now().astimezone().timestamp():
+                    return await self.post_daily_questions(token=token, answer=answer_daily_questions['answer'], reward=daily_questions['reward'])
         except RequestException as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching Daily Questions: {str(e)} ]{Style.RESET_ALL}")
         except (Exception, JSONDecodeError) as e:
@@ -404,6 +404,7 @@ class Timefarm:
                     if 'availableBalance' in account['balanceInfo']['referral'] and account['balanceInfo']['referral']['availableBalance'] != 0:
                         await self.claim_referral_balance(token=account['token'], available_balance=account['balanceInfo']['referral']['availableBalance'])
                     await self.upgrade_level(token=account['token'])
+                    await self.get_daily_questions(token=account['token'])
 
                 for (account, username) in accounts:
                     self.print_timestamp(
