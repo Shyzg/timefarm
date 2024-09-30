@@ -73,6 +73,7 @@ class Timefarm:
             return query
         except Exception as e:
             self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ {session} Unexpected Error While Generating Query With Telethon: {str(e)} ]{Style.RESET_ALL}")
+            await client.disconnect()
             return None
 
     async def generate_queries(self, sessions):
