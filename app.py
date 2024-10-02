@@ -24,8 +24,10 @@ import sys
 
 class Timefarm:
     def __init__(self) -> None:
-        self.api_id = 25657041
-        self.api_hash = 'bcb88f6cbd561eec16e65f4d8ce342da'
+        with open('config.json', 'r') as config_file:
+            config = json.load(config_file)
+        self.api_id = int(config['api_id'])
+        self.api_hash = config['api_hash']
         self.faker = Faker()
         self.headers = {
             'Accept': '*/*',

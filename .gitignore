@@ -4,3 +4,5 @@ development
 venv
 .DS_Store
 *.session
+*.json
+!config.json
