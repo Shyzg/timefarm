@@ -1,3 +1,4 @@
+import random
 from aiohttp import (
     ClientResponseError,
     ClientSession,
@@ -234,8 +235,10 @@ class Timefarm:
                         if task['type'] == 'ADSGRAM': continue
                         if not 'submission' in task or task['submission']['status'] == 'REJECTED':
                             await self.submissions_tasks(token=token, task_id=task['id'], task_title=task['title'], task_reward=task['reward'])
+                            await asyncio.sleep(random.randint(3, 5))
                         elif task['submission']['status'] == 'COMPLETED':
                             await self.claims_tasks(token=token, task_id=task['id'], task_title=task['title'], task_reward=task['submission']['reward'])
+                            await asyncio.sleep(random.randint(3, 5))
         except ClientResponseError as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching Tasks: {str(e)} ]{Style.RESET_ALL}")
         except Exception as e:
@@ -260,6 +263,7 @@ class Timefarm:
                     response.raise_for_status()
                     submissions_tasks = await response.json()
                     if submissions_tasks['result']['status'] == 'COMPLETED':
+                        await asyncio.sleep(random.randint(3, 5))
                         return await self.claims_tasks(token=token, task_id=task_id, task_title=task_title, task_reward=task_reward)
         except ClientResponseError as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Submissions Tasks: {str(e)} ]{Style.RESET_ALL}")
@@ -278,7 +282,7 @@ class Timefarm:
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
                 async with session.post(url=url, headers=headers, data=data, ssl=False) as response:
-                    if e.response.status_code == 400:
+                    if response.status == 400:
                         error_claim_tasks = await response.json()
                         if error_claim_tasks['error']['message'] == 'Failed to claim reward':
                             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Failed To Claim {task_title} ]{Style.RESET_ALL}")
