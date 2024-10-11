@@ -94,7 +94,7 @@ class Timefarm:
         }
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.post(url=url, headers=headers, data=data, ssl=False) as response:
+                async with session.post(url=url, headers=headers, data=data) as response:
                     response.raise_for_status()
                     user_data = json.loads(parse_qs(query)['user'][0])
                     first_name = user_data['first_name'] if user_data['first_name'] == '' else user_data['username']
@@ -123,7 +123,7 @@ class Timefarm:
         }
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.post(url=url, headers=headers, data=data, ssl=False) as response:
+                async with session.post(url=url, headers=headers, data=data) as response:
                     response.raise_for_status()
                     return True
         except (Exception, ClientResponseError):
@@ -137,7 +137,7 @@ class Timefarm:
         }
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.get(url=url, headers=headers, ssl=False) as response:
+                async with session.get(url=url, headers=headers) as response:
                     response.raise_for_status()
                     return await response.json()
         except ClientResponseError as e:
@@ -158,7 +158,7 @@ class Timefarm:
         }
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.post(url=url, headers=headers, data=data, ssl=False) as response:
+                async with session.post(url=url, headers=headers, data=data) as response:
                     if response.status == 403:
                         error_start_farming = await response.json()
                         if error_start_farming['error']['message'] == 'Farming already started':
@@ -182,7 +182,7 @@ class Timefarm:
         }
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.post(url=url, headers=headers, data=data, ssl=False) as response:
+                async with session.post(url=url, headers=headers, data=data) as response:
                     if response.status == 403:
                         error_finish_farming = await response.json()
                         if error_finish_farming['error']['message'] == 'Too early to finish farming':
@@ -209,7 +209,7 @@ class Timefarm:
         }
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.post(url=url, headers=headers, data=data, ssl=False) as response:
+                async with session.post(url=url, headers=headers, data=data) as response:
                     if response.status == 403:
                         error_claim_referral = await response.json()
                         if error_claim_referral['error']['message'] == 'Nothing to claim':
@@ -229,7 +229,7 @@ class Timefarm:
         }
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.get(url=url, headers=headers, ssl=False) as response:
+                async with session.get(url=url, headers=headers) as response:
                     response.raise_for_status()
                     tasks = await response.json()
                     for task in tasks:
@@ -256,7 +256,7 @@ class Timefarm:
         }
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.post(url=url, headers=headers, data=data, ssl=False) as response:
+                async with session.post(url=url, headers=headers, data=data) as response:
                     if response.status == 400:
                         error_submissions_tasks = await response.json()
                         if error_submissions_tasks['error']['message'] == 'Already submitted':
@@ -282,7 +282,7 @@ class Timefarm:
         }
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.post(url=url, headers=headers, data=data, ssl=False) as response:
+                async with session.post(url=url, headers=headers, data=data) as response:
                     if response.status == 400:
                         error_claim_tasks = await response.json()
                         if error_claim_tasks['error']['message'] == 'Failed to claim reward':
@@ -305,7 +305,7 @@ class Timefarm:
         }
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.post(url=url, headers=headers, data=data, ssl=False) as response:
+                async with session.post(url=url, headers=headers, data=data) as response:
                     if response.status == 403:
                         error_upgrade_level = await response.json()
                         if error_upgrade_level['error']['message'] == 'Not enough balance':
@@ -322,7 +322,7 @@ class Timefarm:
         url = 'https://raw.githubusercontent.com/Shyzg/answer/refs/heads/main/answer.json'
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.get(url=url, ssl=False) as response:
+                async with session.get(url=url) as response:
                     response.raise_for_status()
                     answer_daily_questions = json.loads(await response.text())
                     return answer_daily_questions
@@ -337,12 +337,12 @@ class Timefarm:
         }
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.get(url=url, headers=headers, ssl=False) as response:
+                async with session.get(url=url, headers=headers) as response:
                     response.raise_for_status()
                     daily_questions = await response.json()
                     if 'answer' in daily_questions:
                         if daily_questions['answer']['isCorrect']:
-                            return self.print_timestamp(f"{Fore.MAGENTA + Style.BRIGHT}[ Daily Questions Already Answered Correct ]{Style.RESET_ALL}")
+                            return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Daily Questions Already Answered Correct ]{Style.RESET_ALL}")
                     answer_daily_questions = await self.answer_daily_questions()
                     if datetime.fromtimestamp(answer_daily_questions['expires']).astimezone().timestamp() > datetime.now().astimezone().timestamp():
                         return await self.post_daily_questions(token=token, answer=answer_daily_questions['timefarm']['answer'], reward=daily_questions['reward'])
@@ -363,12 +363,11 @@ class Timefarm:
         }
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.post(url=url, headers=headers, data=data, ssl=False) as response:
+                async with session.post(url=url, headers=headers, data=data) as response:
                     response.raise_for_status()
                     daily_questions = await response.json()
                     if daily_questions['isCorrect']:
                         return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {reward} From Daily Questions ]{Style.RESET_ALL}")
-                    return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Your Daily Question Answer Is Wrong ]{Style.RESET_ALL}")
         except ClientResponseError as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Post Daily Questions: {str(e)} ]{Style.RESET_ALL}")
         except Exception as e:
@@ -413,13 +412,13 @@ class Timefarm:
                     await self.upgrade_level(token=account['token'])
                     await self.get_daily_questions(token=account['token'])
 
-                # for (account, first_name) in accounts:
-                #     self.print_timestamp(
-                #         f"{Fore.WHITE + Style.BRIGHT}[ Tasks ]{Style.RESET_ALL}"
-                #         f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
-                #         f"{Fore.CYAN + Style.BRIGHT}[ {first_name} ]{Style.RESET_ALL}"
-                #     )
-                #     await self.tasks(token=account['token'])
+                for (account, first_name) in accounts:
+                    self.print_timestamp(
+                        f"{Fore.WHITE + Style.BRIGHT}[ Tasks ]{Style.RESET_ALL}"
+                        f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
+                        f"{Fore.CYAN + Style.BRIGHT}[ {first_name} ]{Style.RESET_ALL}"
+                    )
+                    await self.tasks(token=account['token'])
 
                 for (account, first_name) in accounts:
                     total_balance += account['balanceInfo']['balance']
