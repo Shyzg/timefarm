@@ -186,9 +186,10 @@ class Timefarm:
                     if response.status == 403:
                         error_finish_farming = await response.json()
                         if error_finish_farming['error']['message'] == 'Too early to finish farming':
-                            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Too Early To Finish Farming ]{Style.RESET_ALL}")
+                            return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Too Early To Finish Farming ]{Style.RESET_ALL}")
                         elif error_finish_farming['error']['message'] == 'Farming didn\'t start':
-                            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Farming Didn\'t Start ]{Style.RESET_ALL}")
+                            self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Farming Didn\'t Start ]{Style.RESET_ALL}")
+                            return await self.start_farming(token=token)
                     response.raise_for_status()
                     self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {farming_reward} From Farming ]{Style.RESET_ALL}")
                     return await self.start_farming(token=token)
@@ -212,7 +213,7 @@ class Timefarm:
                     if response.status == 403:
                         error_claim_referral = await response.json()
                         if error_claim_referral['error']['message'] == 'Nothing to claim':
-                            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Nothing To Claim From Referral ]{Style.RESET_ALL}")
+                            return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Nothing To Claim From Referral ]{Style.RESET_ALL}")
                     response.raise_for_status()
                     return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {available_balance} From Referral ]{Style.RESET_ALL}")
         except ClientResponseError as e:
@@ -232,13 +233,13 @@ class Timefarm:
                     response.raise_for_status()
                     tasks = await response.json()
                     for task in tasks:
-                        if task['type'] == 'ADSGRAM': continue
-                        if not 'submission' in task or task['submission']['status'] == 'REJECTED':
-                            await self.submissions_tasks(token=token, task_id=task['id'], task_title=task['title'], task_reward=task['reward'])
-                            await asyncio.sleep(random.randint(3, 5))
-                        elif task['submission']['status'] == 'COMPLETED':
-                            await self.claims_tasks(token=token, task_id=task['id'], task_title=task['title'], task_reward=task['submission']['reward'])
-                            await asyncio.sleep(random.randint(3, 5))
+                        if task['type'] != 'ADSGRAM' and task['type'] != 'TADS':
+                            if not 'submission' in task or task['submission']['status'] == 'REJECTED':
+                                await self.submissions_tasks(token=token, task_id=task['id'], task_title=task['title'], task_reward=task['reward'])
+                                await asyncio.sleep(random.randint(3, 5))
+                            elif task['submission']['status'] == 'COMPLETED':
+                                await self.claims_tasks(token=token, task_id=task['id'], task_title=task['title'], task_reward=task['submission']['reward'])
+                                await asyncio.sleep(random.randint(3, 5))
         except ClientResponseError as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching Tasks: {str(e)} ]{Style.RESET_ALL}")
         except Exception as e:
@@ -259,7 +260,7 @@ class Timefarm:
                     if response.status == 400:
                         error_submissions_tasks = await response.json()
                         if error_submissions_tasks['error']['message'] == 'Already submitted':
-                            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ {task_title} Already Submitted ]{Style.RESET_ALL}")
+                            return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ {task_title} Already Submitted ]{Style.RESET_ALL}")
                     response.raise_for_status()
                     submissions_tasks = await response.json()
                     if submissions_tasks['result']['status'] == 'COMPLETED':
@@ -285,7 +286,7 @@ class Timefarm:
                     if response.status == 400:
                         error_claim_tasks = await response.json()
                         if error_claim_tasks['error']['message'] == 'Failed to claim reward':
-                            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Failed To Claim {task_title} ]{Style.RESET_ALL}")
+                            return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Failed To Claim {task_title} ]{Style.RESET_ALL}")
                     response.raise_for_status()
                     return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {task_reward} From {task_title} ]{Style.RESET_ALL}")
         except ClientResponseError as e:
@@ -308,7 +309,7 @@ class Timefarm:
                     if response.status == 403:
                         error_upgrade_level = await response.json()
                         if error_upgrade_level['error']['message'] == 'Not enough balance':
-                            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Not Enough Balance To Upgrade Level ]{Style.RESET_ALL}")
+                            return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Not Enough Balance To Upgrade Level ]{Style.RESET_ALL}")
                     response.raise_for_status()
                     upgrade_level = await response.json()
                     return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ Successfully Upgrade Level To {upgrade_level['level']} ]{Style.RESET_ALL}")
@@ -318,10 +319,10 @@ class Timefarm:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Upgrade Level: {str(e)} ]{Style.RESET_ALL}")
 
     async def answer_daily_questions(self):
-        url = 'https://gist.githubusercontent.com/Shyzg/d621b790143efa839eaa72f42ec96479/raw/ca28427b2b5e9a2cecd51033f9fdd4c759a0432f/answer.json'
+        url = 'https://raw.githubusercontent.com/Shyzg/answer/refs/heads/main/answer.json'
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.post(url=url, ssl=False) as response:
+                async with session.get(url=url, ssl=False) as response:
                     response.raise_for_status()
                     answer_daily_questions = json.loads(await response.text())
                     return answer_daily_questions
@@ -341,12 +342,11 @@ class Timefarm:
                     daily_questions = await response.json()
                     if 'answer' in daily_questions:
                         if daily_questions['answer']['isCorrect']:
-                            return self.print_timestamp(f"{Fore.MAGENTA + Style.BRIGHT}[ Daily Questions Already Answered ]{Style.RESET_ALL}")
+                            return self.print_timestamp(f"{Fore.MAGENTA + Style.BRIGHT}[ Daily Questions Already Answered Correct ]{Style.RESET_ALL}")
                     answer_daily_questions = await self.answer_daily_questions()
-                    if answer_daily_questions is not None:
-                        if datetime.fromtimestamp(answer_daily_questions['expires']).astimezone().timestamp() > datetime.now().astimezone().timestamp():
-                            return await self.post_daily_questions(token=token, answer=answer_daily_questions['timefarm']['answer'], reward=daily_questions['reward'])
-                        return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Contact @shyzg To Update Time Farm Answer ]{Style.RESET_ALL}")
+                    if datetime.fromtimestamp(answer_daily_questions['expires']).astimezone().timestamp() > datetime.now().astimezone().timestamp():
+                        return await self.post_daily_questions(token=token, answer=answer_daily_questions['timefarm']['answer'], reward=daily_questions['reward'])
+                    return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Contact @shyzg To Update Time Farm Answer ]{Style.RESET_ALL}")
         except ClientResponseError as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching Daily Questions: {str(e)} ]{Style.RESET_ALL}")
         except Exception as e:
@@ -368,7 +368,7 @@ class Timefarm:
                     daily_questions = await response.json()
                     if daily_questions['isCorrect']:
                         return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {reward} From Daily Questions ]{Style.RESET_ALL}")
-                    return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Your Daily Question Answer Is Wrong ]{Style.RESET_ALL}")
+                    return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Your Daily Question Answer Is Wrong ]{Style.RESET_ALL}")
         except ClientResponseError as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Post Daily Questions: {str(e)} ]{Style.RESET_ALL}")
         except Exception as e:
@@ -413,13 +413,13 @@ class Timefarm:
                     await self.upgrade_level(token=account['token'])
                     await self.get_daily_questions(token=account['token'])
 
-                for (account, first_name) in accounts:
-                    self.print_timestamp(
-                        f"{Fore.WHITE + Style.BRIGHT}[ Tasks ]{Style.RESET_ALL}"
-                        f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
-                        f"{Fore.CYAN + Style.BRIGHT}[ {first_name} ]{Style.RESET_ALL}"
-                    )
-                    await self.tasks(token=account['token'])
+                # for (account, first_name) in accounts:
+                #     self.print_timestamp(
+                #         f"{Fore.WHITE + Style.BRIGHT}[ Tasks ]{Style.RESET_ALL}"
+                #         f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
+                #         f"{Fore.CYAN + Style.BRIGHT}[ {first_name} ]{Style.RESET_ALL}"
+                #     )
+                #     await self.tasks(token=account['token'])
 
                 for (account, first_name) in accounts:
                     total_balance += account['balanceInfo']['balance']
