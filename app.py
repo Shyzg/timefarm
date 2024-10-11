@@ -236,10 +236,8 @@ class Timefarm:
                         if task['type'] != 'ADSGRAM' and task['type'] != 'TADS':
                             if not 'submission' in task or task['submission']['status'] == 'REJECTED':
                                 await self.submissions_tasks(token=token, task_id=task['id'], task_title=task['title'], task_reward=task['reward'])
-                                await asyncio.sleep(random.randint(3, 5))
                             elif task['submission']['status'] == 'COMPLETED':
                                 await self.claims_tasks(token=token, task_id=task['id'], task_title=task['title'], task_reward=task['submission']['reward'])
-                                await asyncio.sleep(random.randint(3, 5))
         except ClientResponseError as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching Tasks: {str(e)} ]{Style.RESET_ALL}")
         except Exception as e:
@@ -264,7 +262,6 @@ class Timefarm:
                     response.raise_for_status()
                     submissions_tasks = await response.json()
                     if submissions_tasks['result']['status'] == 'COMPLETED':
-                        await asyncio.sleep(random.randint(3, 5))
                         return await self.claims_tasks(token=token, task_id=task_id, task_title=task_title, task_reward=task_reward)
         except ClientResponseError as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Submissions Tasks: {str(e)} ]{Style.RESET_ALL}")
