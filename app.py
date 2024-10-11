@@ -381,11 +381,11 @@ class Timefarm:
                 restart_times = []
                 total_balance = 0
 
-                for (account, username) in accounts:
+                for (account, first_name) in accounts:
                     self.print_timestamp(
                         f"{Fore.WHITE + Style.BRIGHT}[ Home ]{Style.RESET_ALL}"
                         f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
-                        f"{Fore.CYAN + Style.BRIGHT}[ {username} ]{Style.RESET_ALL}"
+                        f"{Fore.CYAN + Style.BRIGHT}[ {first_name} ]{Style.RESET_ALL}"
                     )
                     await self.complete_onboarding_me(token=account['token'])
                     self.print_timestamp(
@@ -409,15 +409,15 @@ class Timefarm:
                     await self.upgrade_level(token=account['token'])
                     await self.get_daily_questions(token=account['token'])
 
-                for (account, username) in accounts:
+                for (account, first_name) in accounts:
                     self.print_timestamp(
                         f"{Fore.WHITE + Style.BRIGHT}[ Tasks ]{Style.RESET_ALL}"
                         f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
-                        f"{Fore.CYAN + Style.BRIGHT}[ {username} ]{Style.RESET_ALL}"
+                        f"{Fore.CYAN + Style.BRIGHT}[ {first_name} ]{Style.RESET_ALL}"
                     )
                     await self.tasks(token=account['token'])
 
-                for (account, username) in accounts:
+                for (account, first_name) in accounts:
                     total_balance += account['balanceInfo']['balance']
 
                 if restart_times:
