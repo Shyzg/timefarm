@@ -339,9 +339,9 @@ class Timefarm:
                     if 'answer' in daily_questions:
                         if daily_questions['answer']['isCorrect']:
                             return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Daily Questions Already Answered Correct ]{Style.RESET_ALL}")
-                    answer_daily_questions = await self.answer_daily_questions()
-                    if datetime.fromtimestamp(answer_daily_questions['expires']).astimezone().timestamp() > datetime.now().astimezone().timestamp():
-                        return await self.post_daily_questions(token=token, answer=answer_daily_questions['timefarm']['answer'], reward=daily_questions['reward'])
+                    answers = await self.answers()
+                    if datetime.fromtimestamp(answers['expires']).astimezone().timestamp() > datetime.now().astimezone().timestamp():
+                        return await self.post_daily_questions(token=token, answer=answers['timefarm']['answer'], reward=daily_questions['reward'])
                     return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Contact @shyzg To Update Time Farm Answer ]{Style.RESET_ALL}")
         except ClientResponseError as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching Daily Questions: {str(e)} ]{Style.RESET_ALL}")
