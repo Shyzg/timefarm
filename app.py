@@ -377,7 +377,7 @@ class Timefarm:
     async def main(self):
         while True:
             try:
-                sessions = [file.replace('.session', '') for file in os.listdir('sessions/') if file.endswith('.session')]
+                sessions = [file for file in os.listdir('sessions/') if file.endswith('.session')]
                 if not sessions:
                     return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ No Session Files Found In The Folder! Please Make Sure There Are '*.session' Files In The Folder. ]{Style.RESET_ALL}")
                 queries = await self.generate_queries(sessions=sessions)
