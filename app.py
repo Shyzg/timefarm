@@ -253,7 +253,7 @@ class Timefarm:
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
                 async with session.post(url=url, headers=headers, data=data, ssl=False) as response:
-                    if e.response.status_code == 400:
+                    if response.status == 400:
                         error_submissions_tasks = await response.json()
                         if error_submissions_tasks['error']['message'] == 'Already submitted':
                             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ {task_title} Already Submitted ]{Style.RESET_ALL}")
@@ -301,7 +301,7 @@ class Timefarm:
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
                 async with session.post(url=url, headers=headers, data=data, ssl=False) as response:
-                    if e.response.status_code == 403:
+                    if response.status == 403:
                         error_upgrade_level = await response.json()
                         if error_upgrade_level['error']['message'] == 'Not enough balance':
                             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Not Enough Balance To Upgrade Level ]{Style.RESET_ALL}")
