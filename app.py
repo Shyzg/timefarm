@@ -1,4 +1,3 @@
-import random
 from aiohttp import (
     ClientResponseError,
     ClientSession,
@@ -62,11 +61,16 @@ class Timefarm:
             except (AuthKeyUnregisteredError, UnauthorizedError, UserDeactivatedError, UserDeactivatedBanError) as e:
                 raise e
 
+            await client(messages.StartBotRequest(
+                peer = 'TimeFarmCryptoBot',
+                bot = await client.get_input_entity('TimeFarmCryptoBot'),
+                start_param = 'LnDO5pMtlVk6eMVL'
+            ))
             webapp_response: AppWebViewResultUrl = await client(messages.RequestWebViewRequest(
-                peer='TimeFarmCryptoBot',
-                bot=await client.get_input_entity('TimeFarmCryptoBot'),
-                platform='ios',
-                url='https://tg-bot-tap.laborx.io/'
+                peer = 'TimeFarmCryptoBot',
+                bot = await client.get_input_entity('TimeFarmCryptoBot'),
+                platform = 'ios',
+                url = 'https://tg-bot-tap.laborx.io/'
             ))
             query = unquote(string=webapp_response.url.split('tgWebAppData=')[1].split('&tgWebAppVersion')[0])
 
@@ -99,7 +103,7 @@ class Timefarm:
                     user_data = json.loads(parse_qs(query)['user'][0])
                     first_name = user_data['first_name'] if user_data['first_name'] == '' else user_data['username']
                     return (await response.json(), first_name)
-        except (Exception, ClientResponseError):
+        except (Exception, ClientResponseError) as e:
             self.print_timestamp(
                 f"{Fore.YELLOW + Style.BRIGHT}[ Failed To Process {query} ]{Style.RESET_ALL}"
                 f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
@@ -255,10 +259,12 @@ class Timefarm:
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
                 async with session.post(url=url, headers=headers, data=data, ssl=False) as response:
-                    if response.status == 400:
+                    if response.status in [400, 403]:
                         error_submissions_tasks = await response.json()
                         if error_submissions_tasks['error']['message'] == 'Already submitted':
                             return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ {task_title} Already Submitted ]{Style.RESET_ALL}")
+                        elif error_submissions_tasks['error']['message'] == 'Forbidden':
+                            return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ API Response Got Forbidden While Submissions {task_title} ]{Style.RESET_ALL}")
                     response.raise_for_status()
                     submissions_tasks = await response.json()
                     if submissions_tasks['result']['status'] == 'COMPLETED':
@@ -334,6 +340,10 @@ class Timefarm:
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
                 async with session.get(url=url, headers=headers, ssl=False) as response:
+                    if response.status == 403:
+                        error_daily_questions = await response.json()
+                        if error_daily_questions['error']['message'] == 'There are no daily question':
+                            return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ There Are No Daily Question ]{Style.RESET_ALL}")
                     response.raise_for_status()
                     daily_questions = await response.json()
                     if 'answer' in daily_questions:
