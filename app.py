@@ -101,7 +101,7 @@ class Timefarm:
                 async with session.post(url=url, headers=headers, data=data, ssl=False) as response:
                     response.raise_for_status()
                     user_data = json.loads(parse_qs(query)['user'][0])
-                    first_name = user_data['first_name'] if user_data['first_name'] == '' else user_data['username']
+                    first_name = user_data['first_name'] or self.faker.first_name()
                     return (await response.json(), first_name)
         except (Exception, ClientResponseError) as e:
             self.print_timestamp(
