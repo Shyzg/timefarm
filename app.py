@@ -321,7 +321,7 @@ class Timefarm:
         except Exception as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Upgrade Level: {str(e)} ]{Style.RESET_ALL}")
 
-    async def answers(self):
+    async def answer(self):
         url = 'https://raw.githubusercontent.com/Shyzg/answer/refs/heads/main/answer.json'
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
@@ -349,10 +349,10 @@ class Timefarm:
                     if 'answer' in daily_questions:
                         if daily_questions['answer']['isCorrect']:
                             return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Daily Questions Already Answered Correct ]{Style.RESET_ALL}")
-                    answers = await self.answers()
-                    if datetime.fromtimestamp(answers['expires']).astimezone().timestamp() > datetime.now().astimezone().timestamp():
-                        return await self.post_daily_questions(token=token, answer=answers['timefarm']['answer'], reward=daily_questions['reward'])
-                    return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Contact @shyzg To Update Time Farm Answer ]{Style.RESET_ALL}")
+                    answer = await self.answer()
+                    if answer is not None:
+                        if datetime.fromtimestamp(answer['expires']).astimezone().timestamp() > datetime.now().astimezone().timestamp():
+                            return await self.post_daily_questions(token=token, answer=answer['timefarm'], reward=daily_questions['reward'])
         except ClientResponseError as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching Daily Questions: {str(e)} ]{Style.RESET_ALL}")
         except Exception as e:
